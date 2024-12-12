@@ -12,7 +12,7 @@ Draw filled in twitter logo
 - [ ] Snap curves together
 - [ ] Is inside shape effect
 - [ ] Colors
-- [ ] Menu
+- [x] Menu
 - [ ] Intro page: 
     - [ ] Video demo
     - [x] Explanation
