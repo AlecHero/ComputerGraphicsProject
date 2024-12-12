@@ -1,0 +1,46 @@
+<canvas id="canvas"></canvas>
+<div id="uiContainer">
+    <div id="ui">
+    </div>
+</div>
+
+<style>
+@import url("https://webglfundamentals.org/webgl/resources/webgl-tutorials.css");
+body {
+    margin: 0;
+}
+canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+}
+</style>
+
+<!-- VERTEX SHADER -->
+<script id="vertex-shader" type="x-shader/x-vertex">
+    attribute vec2 a_position;
+    void main() {
+        gl_PointSize = 20.0;
+        gl_Position = a_position;
+    }
+</script>
+
+<!-- FRAGMENT SHADER -->
+<script id="fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform vec4 u_color;
+    void main() {
+        gl_FragColor = u_color;
+    }
+</script>
+
+<!-- IMPORTED SCRIPTS -->
+<script type="text/javascript" src="angelCommon/webgl-utils.js"></script>
+<script type="text/javascript" src="angelCommon/initShaders.js"></script>
+<script type="text/javascript" src="angelCommon/MV.js"></script>
+<script type="text/javascript" src="script.js"></script>
+<script type="text/javascript" src="curves.js"></script>
+
+<script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
+<script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>

@@ -1,52 +1,134 @@
 "use strict";
 
-var gl;
-var points;
+let canvas;
+let gl;
+let program;
 
-var NumPoints = 3;
+let pointsArray = [[0.0, 0.0]];
+let colorsArray = [[0.0, 0.0, 1.0, 1.0]];
+let controlPointsArray = [];
 
-window.onload = function init()
-{
-    var canvas = document.getElementById( "c-ws1-ex2" );
+const CLICK = {LEFT:1, MIDDLE:2, RIGHT:3}
+const TOOLS = {
+    ADD_POINTS: "ADD_POINTS",
+    SELECT_POINTS: "SELECT_POINTS",
+    REMOVE_POINTS: "REMOVE_POINTS",
+    FILL: "FILL",
+}
 
-    gl = WebGLUtils.setupWebGL( canvas );
-    if ( !gl ) { alert( "WebGL isn't available" ); }
+let currentTool = TOOLS.ADD_POINTS;
 
-    //
-    //  Initialize our data for the Sierpinski Gasket
-    //
+function add_points(current_action) {
+    switch (current_action) {
+        case CLICK.LEFT: {
 
-    // First, initialize the corners of our gasket with three points.
+        }
+        case CLICK.RIGHT: {
 
-    var vertices =  [ vec2(0.0, 0.0), vec2(1, 0), vec2(1, 1) ];
-    
-    points = vertices;
+        }
+    }
+}
 
-    gl.viewport( 0, 0, canvas.width, canvas.height );
-    gl.clearColor( 0.3921, 0.5843, 0.9294, 1.0);
+window.onload = main
 
-    //  Load shaders and initialize attribute buffers
+function main() {
+    canvas = document.getElementById("canvas");
+    gl = WebGLUtils.setupWebGL(canvas);
+    program = initShaders(gl, "vertex-shader", "fragment-shader");
 
-    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
-    gl.useProgram( program );
+    let positionLocation = gl.getAttribLocation(program, "a_position")
+    let colorLocation = gl.getAttribLocation(program, "a_color");
 
-    // Load the data into the GPU
+    let positionBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW );
 
-    var bufferId = gl.createBuffer();
-    gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(points), gl.STATIC_DRAW );
-
-    // Associate out shader variables with our data buffer
-
-    var vPosition = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vPosition );
+    let colorBuffer = gl.createBuffer();
+    gl.bindBuffer( gl.ARRAY_BUFFER, colorBuffer );
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(colorsArray), gl.STATIC_DRAW );
 
     render();
+    initEventHandlers(canvas);
+
+    function render() {
+        webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+        gl.clearColor(1, 1, 1, 1);
+
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.useProgram(program);
+
+        gl.enableVertexAttribArray(positionLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+
+        gl.enableVertexAttribArray(colorLocation);
+        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+        gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
+        
+        gl.drawArrays( gl.POINTS, 0, pointsArray.length );
+    }
 };
 
 
-function render() {
-    gl.clear( gl.COLOR_BUFFER_BIT );
-    gl.drawArrays( gl.POINTS, 0, points.length );
-}
+function initEventHandlers(canvas) {
+    var dragging = false;         // Dragging or not
+    var lastX = -1, lastY = -1;   // Last position of the mouse
+    var current_action = 0;       // Actions: 0 - none, 1 - leftclick, 2 - middleclick, 3 - rightclick
+  
+    canvas.onmousedown = function (ev) {   // Mouse is pressed
+      ev.preventDefault();
+      var x = ev.clientX, y = ev.clientY;
+      // Start dragging if a mouse is in <canvas>
+      var rect = ev.target.getBoundingClientRect();
+      if (rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom) {
+        lastX = x; lastY = y;
+        dragging = true;
+        current_action = ev.button + 1;
+      }
+    };
+  
+    canvas.oncontextmenu = function (ev) { ev.preventDefault(); };
+  
+    canvas.onmouseup = function (ev) {
+      var x = ev.clientX, y = ev.clientY;
+      if (x === lastX && y === lastY) { // MOUSEUP IN SAME SPOT AS LAST
+      }
+      dragging = false;
+      current_action = 0;
+    }; // Mouse is released
+  
+    var g_last = Date.now();
+    canvas.onmousemove = function (ev) { // Mouse is moved
+      var x = ev.clientX, y = ev.clientY;
+      if (dragging) {
+        var now = Date.now();
+        var elapsed = now - g_last;
+        if (elapsed > 20) {
+            g_last = now;
+            var rect = ev.target.getBoundingClientRect();
+            var s_x = ((x - rect.left) / rect.width - 0.5) * 2;
+            var s_y = (0.5 - (y - rect.top) / rect.height) * 2;
+            var s_last_x = ((lastX - rect.left) / rect.width - 0.5) * 2;
+            var s_last_y = (0.5 - (lastY - rect.top) / rect.height) * 2;
+
+            switch (currentTool) {
+                case TOOLS.ADD_POINTS: {
+                    add_points(current_action);
+                }
+                case TOOLS.SELECT_POINTS: {
+
+                }
+                case TOOLS.REMOVE_POINTS: {
+
+                }
+                case TOOLS.FILL: {
+
+                }
+            }
+            lastX = x, lastY = y;
+        }
+      }
+    };
+  }
+  
