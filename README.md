@@ -11,8 +11,11 @@ Draw filled in twitter logo
 - [x] Line thickness
 - [ ] Snap curves together
 - [ ] Is inside shape effect
-- [ ] Colors
+- [x] Colors
+    - [ ] Fill figure when pressed with right color
+    - [ ] Set background color
 - [x] Menu
+    - [ ] Read from current_tool to see if active
 - [ ] Intro page: 
     - [ ] Video demo
     - [x] Explanation
