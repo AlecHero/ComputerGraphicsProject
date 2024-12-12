@@ -1,3 +1,5 @@
+// http://demofox.org/bezquadrational.html
+
 function drawBezierCurve(controlPoints, weights, resolution) {
     if (resolution == undefined) {
         resolution = 100; // Number of points for one curve

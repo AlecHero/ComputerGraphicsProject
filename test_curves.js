@@ -10,6 +10,8 @@ var NumPoints = 3;
 window.onload = function init()
 {
     var canvas = document.getElementById( "c-ws1-ex2" );
+    window.addEventListener('keydown', HandleUndoKeyPress);
+    window.addEventListener('keydown', HandleRedoKeyPress);
 
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
