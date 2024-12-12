@@ -2,9 +2,10 @@
 <head>
     <script id="vertex-shader" type="x-shader/x-vertex">
         attribute vec4 vPosition;
+        uniform float pointSize;
         void main() {
-          gl_PointSize = 20.0;
-          gl_Position = vPosition;
+            gl_PointSize = pointSize;
+            gl_Position = vPosition;
         }
     </script>
     <script id="fragment-shader" type="x-shader/x-fragment">
@@ -26,6 +27,10 @@
 <html>
     <body>
         <canvas id="c-ws1-ex2" width="512" height="512"></canvas>
+        <div>
+            <button onclick="increasePointSize()">Increase Point Size</button>
+            <button onclick="decreasePointSize()">Decrease Point Size</button>
+        </div>
     </body>
 </html>
 
