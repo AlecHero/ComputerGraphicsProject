@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<head>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        void main() {
+          gl_PointSize = 20.0;
+          gl_Position = vPosition;
+        }
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform vec4 uColor;
+        void main() {
+            vec2 coord = 2.0 * gl_PointCoord - 1.0;
+            if(length(coord) > 1.0) {discard;}
+            gl_FragColor = uColor;
+        }
+    </script>
+    <script type="text/javascript" src="../../angelCommon/webgl-utils.js"></script>
+    <script type="text/javascript" src="../../angelCommon/initShaders.js"></script>
+    <script type="text/javascript" src="../../angelCommon/MV.js"></script>
+    <script type="text/javascript" src="test_curves.js"></script>
+    <script type="text/javascript" src="curves.js"></script>
+</head>
+<html>
+    <body>
+        <canvas id="c-ws1-ex2" width="512" height="512"></canvas>
+    </body>
+</html>
+
