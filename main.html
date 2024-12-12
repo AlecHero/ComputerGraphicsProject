@@ -18,19 +18,37 @@ canvas {
 
 <!-- VERTEX SHADER -->
 <script id="vertex-shader" type="x-shader/x-vertex">
-    attribute vec2 a_position;
+    attribute vec4 a_position;
     void main() {
-        gl_PointSize = 20.0;
+        gl_PointSize = 5.0;
         gl_Position = a_position;
     }
 </script>
 
 <!-- FRAGMENT SHADER -->
 <script id="fragment-shader" type="x-shader/x-fragment">
+    #ifdef GL_ES
     precision mediump float;
+    #endif
+    // precision mediump float;
     uniform vec4 u_color;
+
     void main() {
-        gl_FragColor = u_color;
+        vec2 coord = 2.0 * gl_PointCoord - 1.0;
+
+        // Calculate distance from the center of the point
+        float dist = length(coord);
+
+        // Discard fragments outside the circle
+        if (dist > 1.0) {
+            discard;
+        }
+
+        float edge = 0.2; // Feather width
+        float alpha = smoothstep(10.0, 4.0 - edge, dist);
+
+        // Set the final color with antialiasing
+        gl_FragColor = vec4(u_color.rgb, u_color.a * alpha);
     }
 </script>
 
