@@ -15,7 +15,7 @@ Draw filled in twitter logo
 - [ ] Menu
 - [ ] Intro page: 
     - [ ] Video demo
-    - [ ] Explanation
+    - [x] Explanation
     - [ ] Link til program
 
 ### Explanation
