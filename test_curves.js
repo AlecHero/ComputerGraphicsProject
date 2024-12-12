@@ -43,20 +43,23 @@ window.onload = function init()
 
     gl.uniform1f(gl.getUniformLocation(program, "pointSize"), pointSize);
 
+    function render() {
+        webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+        gl.clear( gl.COLOR_BUFFER_BIT );
+        
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        
+        gl.uniform4f(gl.getUniformLocation(program, "uColor"), 0.0, 0.0, 0.0, 1.0);
+        gl.drawArrays( gl.POINTS, 0, points.length );
+        
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(vertices));
+        gl.uniform4f(gl.getUniformLocation(program, "uColor"), 1.0, 0.0, 0.0, 1.0);
+        gl.drawArrays( gl.POINTS, 0, vertices.length );
+    }
     render();
 };
 
 
-function render() {
-    gl.clear( gl.COLOR_BUFFER_BIT );
-    
-    gl.uniform4f(gl.getUniformLocation(program, "uColor"), 0.0, 0.0, 0.0, 1.0);
-    gl.drawArrays( gl.POINTS, 0, points.length );
-    
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(vertices));
-    gl.uniform4f(gl.getUniformLocation(program, "uColor"), 1.0, 0.0, 0.0, 1.0);
-    gl.drawArrays( gl.POINTS, 0, vertices.length );
-}
 
 function increasePointSize() {
     pointSize += 5.0;

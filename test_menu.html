@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<head>
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        uniform float pointSize;
+        void main() {
+            gl_PointSize = pointSize;
+            gl_Position = vPosition;
+        }
+    </script>
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+        uniform vec4 uColor;
+        void main() {
+            vec2 coord = 2.0 * gl_PointCoord - 1.0;
+            if(length(coord) > 1.0) {discard;}
+            gl_FragColor = uColor;
+        }
+    </script>
+    <script type="text/javascript" src="../../angelCommon/webgl-utils.js"></script>
+    <script type="text/javascript" src="../../angelCommon/initShaders.js"></script>
+    <script type="text/javascript" src="../../angelCommon/MV.js"></script>
+
+    <script type="text/javascript" src="test_curves.js"></script>
+    <script type="text/javascript" src="curves.js"></script>
+    <script type="text/javascript" src="test_menu.js"></script>
+    <script type="text/javascript" src="keyboard_binds.js"></script>
+
+    <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+    <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<html>
+    <body>
+        <div class="tool-menu">
+            <button class="tool-btn"><i class="fas fa-bezier-curve"></i></button>
+            <button class="tool-btn"><i class="fas fa-eraser"></i></button>
+            <button class="tool-btn"><i class="fas fa-hand"></i></button>
+            <button class="tool-btn"><i class="fas fa-fill-drip"></i></button>
+            <button class="tool-btn"><i class="fas fa-trash-alt"></i></button>
+        </div>
+        <canvas id="c-ws1-ex2" width="512" height="512"></canvas>
+    </body>
+</html>
+
+<style>
+    @import url("https://webglfundamentals.org/webgl/resources/webgl-tutorials.css");
+    body {
+        margin: 0;
+    }
+    canvas {
+        width: 100vw;
+        height: 100vh;
+        display: block;
+    }
+    .tool-menu {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(5px);
+    }
+    .tool-btn {
+        display: block;
+        width: 40px;
+        height: 40px;
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.9);
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    .tool-btn:hover {
+        background: rgba(200, 200, 200, 0.9);
+    }
+    .tool-btn i {
+        font-size: 20px;
+        color: #333;
+    }
+</style>
