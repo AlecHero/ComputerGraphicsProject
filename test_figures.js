@@ -24,7 +24,8 @@ window.onload = function init()
     points.push(...drawBezierCurve(vertices2, weights, resolution));
     vertices.push(...vertices2);
 
-    var colors = color(vec3(0.5, 0.5, 0), points, 0.018);
+    var colors = color(vec3(-0.5, -0.5, 0), points, 0.02);
+    console.log(colors);
     var colors_vec2 = colors.map(color => vec2(color[0], color[1]));
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
