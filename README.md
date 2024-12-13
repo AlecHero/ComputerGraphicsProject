@@ -13,10 +13,10 @@ Draw filled in twitter logo
 - [x] Is inside shape effect
 - [x] Colors
     - [x] Fill figure when pressed with right color
-    - [ ] Set background color / or make background transparent
+    - [x] Set background color / or make background transparent
 - [x] Menu
     - [ ] Read from current_tool to see if active
-    - [ ] Be able to save from menu
+    - [x] Be able to save from menu
 - [x] Intro page: 
     - [ ] Video demo
     - [x] Explanation
