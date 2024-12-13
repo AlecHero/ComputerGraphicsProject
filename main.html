@@ -35,14 +35,8 @@ canvas {
 
     void main() {
         vec2 coord = 2.0 * gl_PointCoord - 1.0;
-
-        // Calculate distance from the center of the point
         float dist = length(coord);
-
-        // Discard fragments outside the circle
-        if (dist > 1.0) {
-            discard;
-        }
+        if (dist > 1.0) { discard; }
 
         float edge = 0.2; // Feather width
         float alpha = smoothstep(10.0, 4.0 - edge, dist);
