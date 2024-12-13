@@ -4,15 +4,15 @@ Bezier Curve 2D program
 Draw filled in twitter logo
 
 - [x] Control points with curves
-- [ ] Mouse down effect
+- [x] Mouse down effect
 - [x] Keyboard handle pressdown
     - [ ] Implement Redo
     - [ ] Implement Undo
 - [x] Line thickness
-- [ ] Snap curves together
-- [ ] Is inside shape effect
+- [x] Snap curves together
+- [x] Is inside shape effect
 - [x] Colors
-    - [ ] Fill figure when pressed with right color
+    - [x] Fill figure when pressed with right color
     - [ ] Set background color
 - [x] Menu
     - [ ] Read from current_tool to see if active
