@@ -14,7 +14,7 @@ window.onload = function init()
     window.addEventListener('keydown', HandleUndoKeyPress);
     window.addEventListener('keydown', HandleRedoKeyPress);
 
-    gl = WebGLUtils.setupWebGL( canvas );
+    gl = WebGLUtils.setupWebGL( canvas , {preserveDrawingBuffer: true});
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     vertices =  [ vec2(0.0, 0.0), vec2(1, 0), vec2(1, 1) ];
@@ -70,8 +70,8 @@ window.onload = function init()
         render();
     }
 
-    document.getElementById("increasePointSize").addEventListener("click", increasePointSize);
-    document.getElementById("decreasePointSize").addEventListener("click", decreasePointSize);
+    // document.getElementById("increasePointSize").addEventListener("click", increasePointSize);
+    // document.getElementById("decreasePointSize").addEventListener("click", decreasePointSize);
 
 };
 
