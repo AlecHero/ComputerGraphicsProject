@@ -84,6 +84,10 @@ function main() {
         gl.clear(gl.COLOR_BUFFER_BIT);
         gl.useProgram(program);
         
+        const lineWidthRange = gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE);
+        console.log('Supported line width range:', lineWidthRange);
+
+
         gl.uniform1f(testlocs[0], test_vals[0]);
         gl.uniform1f(testlocs[1], test_vals[1]);
         gl.uniform1f(testlocs[2], test_vals[2]);
@@ -94,10 +98,10 @@ function main() {
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
                 
         let numPoints = vec_flatten(curvePointsArray).length;
-        gl.drawArrays( gl.POINTS, 0, numPoints );
+        gl.drawArrays( gl.LINE_STRIP, 0, numPoints );
         
         gl.uniform4fv(colorLocation, [1.0, 0.0, 0.0, 1]);
-        gl.uniform1f(pointSizeLocation, 16.0);
+        gl.uniform1f(pointSizeLocation, 8.0);
         gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
         gl.bufferData( gl.ARRAY_BUFFER, vec_flatten(controlPointsArray), gl.STATIC_DRAW );
         
@@ -107,7 +111,7 @@ function main() {
 
     function updateCurve() {
         let weights = [1.0,1.0,1.0];
-        const resolution = 1000;
+        const resolution = 30;
         
         curvePointsArray = [];
         for (let i = 0; i < controlPointsArray.length; i++) {
@@ -121,7 +125,7 @@ function main() {
         }
 
         gl.uniform4fv(colorLocation, [0.0, 0.0, 0.0, 1]);
-        gl.uniform1f(pointSizeLocation, 6.0);
+        gl.uniform1f(pointSizeLocation, 3.0);
         gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
         gl.bufferData( gl.ARRAY_BUFFER, vec_flatten(curvePointsArray), gl.STATIC_DRAW );   
         
