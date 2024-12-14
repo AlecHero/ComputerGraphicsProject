@@ -4,10 +4,19 @@ let canvas;
 let gl;
 let program;
 
-let curvePointsArray = [];
+// The list of controlPointGroups
 let controlPointsArray = [];
+
+// The Control Point Group currently being edited:
 let currentControlGroup = [];
 let currentControlGroupFixed = [];
+
+// The points along the curves with indices equal
+// to the control points array, shape (n_controlPointGroups, resolution)
+let curvePointsArray = [];
+// The line segments connecting the curve points
+let curveLinesArray = [];
+
 
 function render() {}
 function updateCurve() {}
@@ -71,7 +80,7 @@ function main() {
     let positionBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, 12 * maxPoints, gl.STATIC_DRAW ); // 8 bytes per vec2
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, vec_flatten(curvePointsArray));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, vec_flatten(curveLinesArray));
 
     render();
     initEventHandlers(canvas);
@@ -93,37 +102,36 @@ function main() {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
                 
-        let numPoints = vec_flatten(curvePointsArray).length;
-        gl.drawArrays( gl.POINTS, 0, numPoints );
+        let numPoints = vec_flatten(curveLinesArray).length;
+        console.log((curveLinesArray));
+        gl.drawArrays( gl.TRIANGLE_STRIP, 0, numPoints );
         
         gl.uniform4fv(colorLocation, [1.0, 0.0, 0.0, 1]);
-        gl.uniform1f(pointSizeLocation, 16.0);
         gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-        gl.bufferData( gl.ARRAY_BUFFER, vec_flatten(controlPointsArray), gl.STATIC_DRAW );
+        gl.bufferData( gl.ARRAY_BUFFER, vec_flatten(currentControlGroup), gl.STATIC_DRAW );
         
-        let numControlPoints = vec_flatten(controlPointsArray).length;
+        let numControlPoints = vec_flatten(currentControlGroup).length;
         gl.drawArrays( gl.POINTS, 0, numControlPoints );
     }
-
     function updateCurve() {
         let weights = [1.0,1.0,1.0];
-        const resolution = 1000;
-        
-        curvePointsArray = [];
-        for (let i = 0; i < controlPointsArray.length; i++) {
-            let curve = drawBezierCurve(controlPointsArray[i], weights, resolution);
-            curvePointsArray.push(curve);
-        }
+        const resolution = 25;
+        const line_width = 0.1;
+
+        curveLinesArray = [];
+        // for (let i = 0; i < controlPointsArray.length; i++) {
+        //     let curve = drawBezierCurve(controlPointsArray[i], weights, resolution);
+        //     curvePointsArray.push(curve);
+        // }
 
         if (currentControlGroup.length > 0) {
             let curve = drawBezierCurve(currentControlGroup, weights, resolution);
-            curvePointsArray.push(curve);
+            curveLinesArray.push(createThickLinesFromCurve(curve, line_width));
         }
 
         gl.uniform4fv(colorLocation, [0.0, 0.0, 0.0, 1]);
-        gl.uniform1f(pointSizeLocation, 6.0);
         gl.bindBuffer( gl.ARRAY_BUFFER, positionBuffer );
-        gl.bufferData( gl.ARRAY_BUFFER, vec_flatten(curvePointsArray), gl.STATIC_DRAW );   
+        gl.bufferData( gl.ARRAY_BUFFER, vec_flatten(curveLinesArray), gl.STATIC_DRAW );   
         
         render();
     }
@@ -158,6 +166,7 @@ function main() {
             let mouse_pos = get_mouse_pos(ev);
             let is_lining = (currentControlGroupFixed.length > 0) && (currentControlGroupFixed.length < 3);
 
+            currentControlGroup = [];
             if (is_lining) {
                 currentControlGroup = currentControlGroupFixed.slice();
                 currentControlGroup.push(vec3(...mouse_pos, 0));
@@ -180,8 +189,7 @@ function main() {
     function add_point(mouse_pos) {
         const snap_radius = 0.03;
         if (currentControlGroupFixed.length < 2) {
-            let snapped_mouse_pos = get_snapped(mouse_pos, controlPointsArray, snap_radius);
-            currentControlGroupFixed.push(snapped_mouse_pos);
+            currentControlGroupFixed.push(get_snapped(mouse_pos, controlPointsArray, snap_radius));
         } else {
             currentControlGroupFixed.push(vec3(...mouse_pos, 0.0));
         }
@@ -230,6 +238,18 @@ function vec_flatten(list) {
     return new Float32Array(flattened_list);
 }
 
+// function vec_flatten2(list) {
+//     let flattened_list = [];
+//     for (var i = 0; i < list.length; i++) {
+//         for (var j = 0; j < list[i].length; j++) {
+//             for (var k = 0; k < list[i][j].length; k++) {
+//                 flattened_list.push(...list[i][j][k]);
+//             }
+//         }
+//     }
+//     return new Float32Array(flattened_list);
+// }
+
 function euclidean(point1, point2) {
     const [x1, y1] = point1;
     const [x2, y2] = point2;
@@ -240,7 +260,7 @@ function euclidean(point1, point2) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-function get_snapped(coord, snap_to_coords, radius) {
+function get_snapped(coord, snap_to_coords) {
     // radius is a % of screen size
     let closest_snapped = Infinity;
     let snap_x, snap_y;

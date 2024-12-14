@@ -3,10 +3,6 @@
 
 <div id="uiContainer">
     <div id="ui">
-        <div id="test1"></div>
-        <div id="test2"></div>
-        <div id="test3"></div>
-        <div id="test4"></div>
     </div>
 </div>
 
@@ -106,34 +102,18 @@ canvas {
     uniform float u_point_size;
 
     void main() {
-        gl_PointSize = u_point_size;
+        gl_PointSize = 8.0;
         gl_Position = a_position;
     }
 </script>
 
 <!-- FRAGMENT SHADER -->
 <script id="fragment-shader" type="x-shader/x-fragment">
-    #ifdef GL_ES
     precision mediump float;
-    #endif
-    // precision mediump float;
     uniform vec4 u_color;
 
-    uniform float test1;
-    uniform float test2;
-    uniform float test3;
-    uniform float test4;
-
     void main() {
-        vec2 coord = 2.0 * gl_PointCoord - 1.0;
-        float dist = length(coord);
-        if (dist > 1.0) { discard; }
-
-        float edge = 0.2; // Feather width
-        float alpha = smoothstep(10.0, 4.0 - edge, dist);
-
-        // Set the final color with antialiasing
-        gl_FragColor = vec4(u_color.rgb, u_color.a * alpha);
+        gl_FragColor = u_color;
     }
 </script>
 
@@ -141,8 +121,9 @@ canvas {
 <script type="text/javascript" src="angelCommon/webgl-utils.js"></script>
 <script type="text/javascript" src="angelCommon/initShaders.js"></script>
 <script type="text/javascript" src="angelCommon/MV.js"></script>
-<script type="text/javascript" src="script.js"></script>
+<script type="text/javascript" src="simple_line.js"></script>
 <script type="text/javascript" src="curves.js"></script>
+<script type="text/javascript" src="handle_mouse.js"></script>
 
 <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
 <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
