@@ -10,7 +10,7 @@ function initEventHandlers(canvas) {
             switch (currentTool) {
                 case TOOLS.ADD_POINTS: { add_point(mouse_pos); }
                 // case TOOLS.REMOVE_POINTS: { remove_point(); }
-                // case TOOLS.SELECT_POINTS: { select_point(); }
+                case TOOLS.SELECT_POINTS: { select_point(mouse_pos); }
                 // case TOOLS.FILL: { fill(); }
             }
             is_dragging = true;
@@ -23,7 +23,6 @@ function initEventHandlers(canvas) {
 
     canvas.onmousemove = function (ev) { // Mouse is moved
         let mouse_pos = get_mouse_pos(ev);
-        console.log(mouse_pos);
         snapped_coord = get_snapped(mouse_pos, concatControlPointsArray, snap_radius);
         if (snapped_coord !== undefined) {
             document.body.style.cursor = 'pointer';

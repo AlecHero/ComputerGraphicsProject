@@ -29,7 +29,15 @@ const TOOLS = {
     FILL: "FILL",
 }
 let currentTool = TOOLS.ADD_POINTS;
-
+function setTool(newTool) {
+    if (newTool != currentTool) {
+        currentTool = newTool;
+        if (currentControlGroupFixed.length > 0) {
+            currentControlGroupFixed = [];
+            render();
+        }
+    }
+}
 
 const resolution = 25;
 const line_width = .01;
@@ -102,7 +110,6 @@ function render() {
 
 
 function add_point(mouse_pos) {
-    
     if (currentControlGroupFixed.length == 3) {
         controlGroupsArray.push(currentControlGroupFixed);
         currentControlGroupFixed = [];
@@ -189,6 +196,24 @@ function get_snapped(coord, snap_to_coords, radius, extra_loop=undefined) {
         return undefined
     }
 }
+
+
+function get_snap_point(mouse_pos, control_groups_array, radius) {
+    let min_dist = Infinity;
+    let sx, sy;
+
+    for (let i = 0; i < control_groups_array.length; i++) {
+        for (let j = 0; j < 2; j++) {
+            let dist = euclidean(mouse_pos, control_groups_array[i][j]);
+            if ((dist < radius) & (dist < min_dist)) { 
+                min_dist = dist;
+                [sx, sy] = [i,j];
+            }
+        }
+    }
+    return (sx === undefined) ? undefined : [sx, sy];
+}
+
 
 
 window.onload = main;
