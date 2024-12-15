@@ -4,14 +4,13 @@ function initEventHandlers(canvas) {
     
     canvas.onmousedown = function (ev) {
         ev.preventDefault();
-        let mouse_pos = get_mouse_pos(ev);
         
         if (is_on_canvas(ev)) {
             switch (currentTool) {
-                case TOOLS.ADD_POINTS: { add_point(mouse_pos); }
-                // case TOOLS.REMOVE_POINTS: { remove_point(); }
-                case TOOLS.SELECT_POINTS: { select_point(mouse_pos); }
-                // case TOOLS.FILL: { fill(); }
+                case TOOLS.ADD_POINTS: { add_point(); break; }
+                // case TOOLS.REMOVE_POINTS: { remove_point(); break; }
+                case TOOLS.SELECT_POINTS: { select_point(); break; }
+                // case TOOLS.FILL: { fill(); break; }
             }
             is_dragging = true;
         }
@@ -22,17 +21,17 @@ function initEventHandlers(canvas) {
     };
 
     canvas.onmousemove = function (ev) { // Mouse is moved
-        let mouse_pos = get_mouse_pos(ev);
-        snapped_coord = get_snapped(mouse_pos, concatControlPointsArray, snap_radius);
-        if (snapped_coord !== undefined) {
-            document.body.style.cursor = 'pointer';
-        } else {
-            document.body.style.cursor = 'default';
-        }
+        update_mouse_pos(ev);
+        let is_selecting = currentTool == TOOLS.SELECT_POINTS;
 
-        let is_lining = (currentControlGroupFixed.length > 0) && (currentControlGroupFixed.length < 3);
+        let snap_indices = find_snap(controlGroupsArray, snap_radius, include_control=is_selecting);
+        let can_snap = (snap_indices !== undefined);
 
-        if (is_lining && is_on_canvas(ev)) { updateCurrentControlGroup(mouse_pos) }
+        document.body.style.cursor = can_snap ? "pointer" : "default";
+
+        let is_lining = (currentGroupFixed.length > 0) && (currentGroupFixed.length < 3);
+
+        if (is_lining && is_on_canvas(ev)) { updateCurrentControlGroup() }
         if (is_dragging) {  }
     };
 
@@ -45,13 +44,12 @@ function initEventHandlers(canvas) {
         return rect.left <= x && x < rect.right && rect.top <= y && y < rect.bottom
     }
     
-    function get_mouse_pos(ev) {
+    function update_mouse_pos(ev) {
         var x = ev.clientX, y = ev.clientY;
         let rect = ev.target.getBoundingClientRect();
-        let mouse_pos = [
+        mouse_pos = [
             ((x - rect.left) / rect.width - 0.5) * 2,
             (0.5 - (y - rect.top) / rect.height) * 2
         ];
-        return mouse_pos
     }
 }

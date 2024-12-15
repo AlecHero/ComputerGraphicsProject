@@ -7,20 +7,16 @@ let controlPointPositionBuffer;
 
 let positionLocation
 let colorLocation;
-// let aspectRatioLocation;
-// The list of controlPointGroups
-let controlGroupsArray = [];
-// The Control Point Group currently being edited:
-let currentControlGroup = [];
-let currentControlGroupFixed = [];
-// The points along the curves with indices equal
-// to the control points array, shape (n_controlPointGroups, resolution)
-let curvePointsArray = [];
-// The line segments connecting the curve points
-let curveLinesArray = [];
-let concatControlPointsArray = [];
 
-let currentIndex = 0;
+let currentIndex = -1;
+let controlGroupsArray = [[]]; // (3 x 3 x n_curves + currentGroup)
+let currentGroup = [];       // (3 x 3)
+let currentGroupFixed = [];  // (3 x 3)
+
+let curvePointsArray = [[]];   // (resolution x 3 x n_curves)
+let curveLinesArray = [[]];    // ((resolution x 4 + 2) x 3 x n_curves)
+
+let mouse_pos = [0,0];
 
 const TOOLS = {
     SELECT_POINTS: "SELECT_POINTS",
@@ -32,8 +28,8 @@ let currentTool = TOOLS.ADD_POINTS;
 function setTool(newTool) {
     if (newTool != currentTool) {
         currentTool = newTool;
-        if (currentControlGroupFixed.length > 0) {
-            currentControlGroupFixed = [];
+        if (currentGroupFixed.length > 0) {
+            currentGroupFixed = [];
             render();
         }
     }
@@ -100,7 +96,7 @@ function render() {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, numCurvePoints);
 
     // Draw control points
-    let numControlPoints = flatten(controlGroupsArray).length + currentControlGroup.length;
+    let numControlPoints = flatten(controlGroupsArray).length + currentGroup.length;
     gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
 
@@ -109,38 +105,63 @@ function render() {
 }
 
 
-function add_point(mouse_pos) {
-    if (currentControlGroupFixed.length == 3) {
-        controlGroupsArray.push(currentControlGroupFixed);
-        currentControlGroupFixed = [];
-        currentControlGroup = [];
-        currentIndex = curvePointsArray.length;
-    }
-    
-    let snapped_pos = get_snapped(mouse_pos, controlGroupsArray, snap_radius, true)
-    
-    if (snapped_pos !== undefined) { fixed_pos = snapped_pos; }
-    else { fixed_pos = mouse_pos; }
+function select_point() {
+    let snap_indices = find_snap(controlGroupsArray, snap_radius, include_control=true);
+    let has_selected_point = snap_indices !== undefined;
 
-    let mouse_point = [...fixed_pos, 0.0];
-
-    if (currentControlGroupFixed.length < 3) {
-        currentControlGroupFixed.push(mouse_point);
-    }
-    updateCurrentControlGroup(mouse_pos);
+    if (has_selected_point) { updateCurrentIndex(snap_indices); }
 }
 
 
-function updateCurrentControlGroup(mouse_pos) {
-    currentControlGroup = currentControlGroupFixed.slice();
-    for (let i = 0; i < 3; i++) {
-        if (currentControlGroup[i] === undefined) {
-            currentControlGroup[i] = [...mouse_pos, 0.0];
-        }
-    }
+function add_point() {
+    if (currentGroupFixed.length == 0) { currentIndex++; }
 
-    // Updating Curve
-    let curve_points = drawBezierCurve(currentControlGroup, weights, resolution);
+    // Snap to point if any are viable:
+    let controlGroupsArrayWOCurrent = controlGroupsArray.slice();
+    controlGroupsArrayWOCurrent[currentIndex] = [[Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0]];
+
+    let snap_indices = find_snap(controlGroupsArrayWOCurrent, snap_radius);
+    let can_snap = (snap_indices !== undefined) && (currentGroupFixed.length < 2);
+    let snapped_point = (!can_snap) ? [...mouse_pos, 0.0] : controlGroupsArray[snap_indices[0]][snap_indices[1]];
+    
+    console.log(snap_indices !== undefined, snapped_point);
+
+    // Add new point
+    if (currentGroupFixed.length < 3) { currentGroupFixed.push(snapped_point); }
+
+    updateCurrentControlGroup();
+
+    // If fixed group is completely fixed/set, clear it
+    if (currentGroupFixed.length == 3) { currentGroupFixed = []; }
+}
+
+// Updates fixed group
+function updateCurrentIndex(group_indices) {
+    currentIndex = group_indices[0];
+    currentGroupFixed = controlGroupsArray[group_indices[0]].slice();
+    controlGroupsArray.splice(group_indices[0], 1);
+    currentGroupFixed[group_indices[1]] = undefined;
+    
+    updateCurrentControlGroup();
+}
+
+
+function updateCurrentControlGroup() {
+    currentGroup = currentGroupFixed.slice();
+
+    // Fill undefined values:
+    for (let i = 0; i < 3; i++) { if (currentGroup[i] === undefined) { currentGroup[i] = [...mouse_pos, 0.0]; } }
+
+    // Ensure current control group can be set, and set it:
+    if (controlGroupsArray[currentIndex] === undefined) { controlGroupsArray.push([]); }
+    controlGroupsArray[currentIndex] = currentGroup.slice();
+
+    updateCurve();
+}
+
+function updateCurve() {
+    // Update Curve
+    let curve_points = drawBezierCurve(currentGroup, weights, resolution);
     curvePointsArray[currentIndex] = [curve_points]
     
     let curve_lines = createThickLinesFromCurve(curve_points, line_width);
@@ -149,14 +170,14 @@ function updateCurrentControlGroup(mouse_pos) {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER, indexCurveLine, flatten(curve_lines));
     
+    // Update Points
     let indexControlGroup = currentIndex * 3 * 3 * Float32Array.BYTES_PER_ELEMENT;
-    concatControlPointsArray = controlGroupsArray.slice();
-    concatControlPointsArray.push(currentControlGroup);
     gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
-    gl.bufferSubData(gl.ARRAY_BUFFER, indexControlGroup, flatten(currentControlGroup));
-
+    gl.bufferSubData(gl.ARRAY_BUFFER, indexControlGroup, flatten(currentGroup));
+    
     render();
 }
+
 
 function euclidean(point1, point2) {
     const [x1, y1] = point1;
@@ -166,54 +187,24 @@ function euclidean(point1, point2) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-function get_snapped(coord, snap_to_coords, radius, extra_loop=undefined) {
-    let closest_snapped = Infinity;
-    let snap_x, snap_y;
-    for (let i = 0; i < snap_to_coords.length; i++) {
-        if (extra_loop !== undefined) {
-            for (let k = 0; k < snap_to_coords[i].length; k++) {
-                for (let j = 0; j < 2; j++) {
-                    let dist = euclidean(coord, snap_to_coords[i][j]);
-                    if ((dist < radius) & (Math.min(closest_snapped, dist) == dist)) { 
-                        closest_snapped = dist;
-                        [snap_x, snap_y] = [i,j];
-                    }
-                }
-            } 
-        } else {
-            for (let j = 0; j < 2; j++) {
-                let dist = euclidean(coord, snap_to_coords[i][j]);
-                if ((dist < radius) & (Math.min(closest_snapped, dist) == dist)) { 
-                    closest_snapped = dist;
-                    [snap_x, snap_y] = [i,j];
-                }
-            }
-        }
-    }
-    if (snap_x !== undefined) {
-        return snap_to_coords[snap_x][snap_y];
-    } else {
-        return undefined
-    }
-}
-
-
-function get_snap_point(mouse_pos, control_groups_array, radius) {
+function find_snap(control_groups_array, radius, include_control=false) {
     let min_dist = Infinity;
     let sx, sy;
 
+    let num_points_to_check = (include_control ? 3 : 2);
+
     for (let i = 0; i < control_groups_array.length; i++) {
-        for (let j = 0; j < 2; j++) {
-            let dist = euclidean(mouse_pos, control_groups_array[i][j]);
-            if ((dist < radius) & (dist < min_dist)) { 
-                min_dist = dist;
-                [sx, sy] = [i,j];
+        for (let k = 0; k < control_groups_array[i].length; k++) {
+            for (let j = 0; j < num_points_to_check; j++) {
+                let dist = euclidean(mouse_pos, control_groups_array[i][j]);
+                if ((dist < radius) & (dist < min_dist)) { 
+                    min_dist = dist;
+                    [sx, sy] = [i,j];
+                }
             }
         }
     }
     return (sx === undefined) ? undefined : [sx, sy];
 }
-
-
 
 window.onload = main;
