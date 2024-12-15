@@ -100,9 +100,10 @@ canvas {
 <script id="vertex-shader" type="x-shader/x-vertex">
     attribute vec4 a_position;
     uniform float u_point_size;
+    // uniform float u_aspect_ratio;
 
     void main() {
-        gl_PointSize = 8.0;
+        gl_PointSize = 15.0;
         gl_Position = a_position;
     }
 </script>
@@ -113,7 +114,15 @@ canvas {
     uniform vec4 u_color;
 
     void main() {
-        gl_FragColor = u_color;
+        vec2 coord = 2.0 * gl_PointCoord - 1.0;
+        float dist = length(coord);
+        if (dist > 1.0) { discard; }
+
+        float edge = 0.3; // Feather width
+        float alpha = smoothstep(1.0, 1.0 - edge, dist*1.2);
+        vec4 col = u_color;
+        col.x *= alpha;
+        gl_FragColor = col;
     }
 </script>
 

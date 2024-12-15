@@ -23,8 +23,8 @@ function initEventHandlers(canvas) {
 
     canvas.onmousemove = function (ev) { // Mouse is moved
         let mouse_pos = get_mouse_pos(ev);
-
-        snapped_coord = get_snapped(mouse_pos, controlPointsArray);
+        console.log(mouse_pos);
+        snapped_coord = get_snapped(mouse_pos, concatControlPointsArray, snap_radius);
         if (snapped_coord !== undefined) {
             document.body.style.cursor = 'pointer';
         } else {

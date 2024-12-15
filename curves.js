@@ -20,63 +20,46 @@ function getBezierCurvePoint(controlPointGroup, weights, t) {
     return add(part_one, add(part_two, part_three));
 }
 
-
 function createThickLine(p1, p2, width) {
-    if (p2 == [0,0]) {
-        console.error("Invalid points:", p1, p2);
-        return [];
-    }
+    let aspect_ratio = canvas.width / canvas.height;
 
     const dx = p2[0] - p1[0];
     const dy = p2[1] - p1[1];
     const len = Math.sqrt(dx * dx + dy * dy);
-    const nx = -dy / len * width / 2;
-    const ny = dx / len * width / 2;
+    const nx = -(dy / len) * (width / 2) / aspect_ratio;
+    const ny = (dx / len) * (width / 2);
 
-    return [
+    // Has double first and double last point to avoid triangle_strip connecting differnet curves
+    // Unfortunately that also means that each line segment currently doesn't connect which leads
+    // to very choppy results in certain configurations.
+    let line = [
         p1[0] + nx, p1[1] + ny, 0.0, // Top-left of the first point
         p1[0] - nx, p1[1] - ny, 0.0, // Bottom-left of the first point
         p2[0] + nx, p2[1] + ny, 0.0, // Top-right of the second point
         p2[0] - nx, p2[1] - ny, 0.0, // Bottom-right of the second point
-        p1[0] + nx, p1[1] + ny, 0.0, p2[0] + nx, p2[1] + ny, 0.0, // for wireframe look include:
-        p2[0] + nx, p2[1] + ny, 0.0, p2[0] - nx, p2[1] - ny, 0.0,
-        p2[0] - nx, p2[1] - ny, 0.0, p1[0] - nx, p1[1] - ny, 0.0,
-        p1[0] - nx, p1[1] - ny, 0.0, p1[0] + nx, p1[1] + ny, 0.0,
+        // p2[0] - nx, p2[1] - ny, 0.0, p1[0] - nx, p1[1] - ny, 0.0,
+        // p1[0] - nx, p1[1] - ny, 0.0, p1[0] + nx, p1[1] + ny, 0.0,
     ];
+    return line
 }
 
 function createThickLinesFromCurve(points, width) {
     const thickLines = [];
 
-    for (let i = 0; i < points.length-1; i++) {
+    for (let i = 0; i < points.length - 1; i++) {
         const p1 = points[i];
-        const p2 = points[i+1];
+        const p2 = points[i + 1];
 
         // Generate a thick line segment for the current pair of points
         const thickLine = createThickLine(p1, p2, width);
-        thickLines.push(thickLine);
+        thickLines.push(...thickLine);
     }
+
+    // Creating degenerate triangles(?)
+    let start_point = thickLines.slice(0, 3);
+    let last_point = thickLines.slice(-3);
+    thickLines.splice(0, 0, ...start_point); // first point of first line
+    thickLines.push(...last_point);
 
     return thickLines;
 }
-
-// function createThickLinesFromCurve(points, width) {
-//     const thickLines = [];
-
-//     for (let i = 0; i < points.length - 1; i++) {
-//         const p1 = points[i];
-//         const p2 = points[i + 1];
-
-//         // Generate a thick line segment for the current pair of points
-//         const thickLine = createThickLine(p1, p2, width);
-//         thickLines.push(...thickLine);
-
-//         // Insert degenerate vertices to prevent unwanted connections
-//         if (i < points.length - 2) {
-//             thickLines.push(...thickLine.slice(-3)); // Last vertex repeated
-//             thickLines.push(...thickLine.slice(-3)); // Last vertex repeated again
-//         }
-//     }
-
-//     return thickLines;
-// }
