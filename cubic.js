@@ -41,10 +41,11 @@ const resolution = 25;
 const line_width = .01;
 const snap_radius = 0.03; // make more sensible number to work from
 const max_curves = 2000;
-let weights = [1,1,1];
-const numSegmentPoints = 6; // Depends on how many points in createThickLine
+const n_segment_points = 4; // Depends on how many points in createThickLine
+const n_control_points = 4;
+const n_point_dim = 3;
 
-const dummy_point = [[Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0]];
+const dummy_point = [[Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0]];
 
 
 function main() {
@@ -59,11 +60,11 @@ function main() {
 
     positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, max_curves * (2 + resolution * numSegmentPoints) * 3 * Float32Array.BYTES_PER_ELEMENT, gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, max_curves * (2 + resolution * n_segment_points) * n_control_points * Float32Array.BYTES_PER_ELEMENT, gl.DYNAMIC_DRAW);
     
     controlPointPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, max_curves * resolution * 3 * 3 * Float32Array.BYTES_PER_ELEMENT, gl.DYNAMIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, max_curves * resolution * n_control_points * n_point_dim * Float32Array.BYTES_PER_ELEMENT, gl.DYNAMIC_DRAW);
     
     positionLocation = gl.getAttribLocation(program, "a_position")
     colorLocation = gl.getUniformLocation(program, "u_color");
@@ -86,7 +87,6 @@ function render() {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(program);
-    // gl.uniform1f(aspectRatioLocation, canvas.width / canvas.height);
 
     // Draw curves
     let numCurvePoints = 0;
@@ -126,13 +126,7 @@ function select_point(drop=false) {
 
 
 function add_point() {
-    console.log(currentIndex);
-    
-    if (currentGroupFixed.length == 0) {
-        currentIndex = controlGroupsArray.length;
-    }
-    
-    console.log(currentIndex);
+    if (currentGroupFixed.length == 0) { currentIndex = controlGroupsArray.length; }
 
     // Snap to point if any are viable:
     let controlGroupsArrayWOCurrent = controlGroupsArray.slice();
@@ -143,12 +137,12 @@ function add_point() {
     let snapped_point = (!can_snap) ? [...mouse_pos, 0.0] : controlGroupsArray[snap_indices[0]][snap_indices[1]];
     
     // Add new point
-    if (currentGroupFixed.length < 3) { currentGroupFixed.push(snapped_point); }
+    if (currentGroupFixed.length < n_control_points) { currentGroupFixed.push(snapped_point); }
 
     updateCurrentControlGroup();
 
     // If fixed group is completely fixed/set, clear it
-    if (currentGroupFixed.length == 3) { currentGroupFixed = []; }
+    if (currentGroupFixed.length == n_control_points) { currentGroupFixed = []; }
 }
 
 
@@ -160,7 +154,7 @@ function updateCurrentControlGroup() {
     let snapped_point = (!can_snap) ? [...mouse_pos, 0.0] : controlGroupsArray[snap_indices[0]][snap_indices[1]];
 
     // Fill undefined values:
-    for (let i = 0; i < 3; i++) { if (currentGroup[i] === undefined) { currentGroup[i] = snapped_point; } }
+    for (let i = 0; i < n_control_points; i++) { if (currentGroup[i] === undefined) { currentGroup[i] = snapped_point; } }
 
     // Ensure current control group can be set, and set it:
     if (controlGroupsArray[currentIndex] === undefined) { controlGroupsArray.push([]); }
@@ -176,12 +170,12 @@ function updateCurve() {
     
     let curve_lines = createThickLinesFromCurve(curve_points, line_width);
     curveLinesArray[currentIndex] = [curve_lines]
-    let indexCurveLine = currentIndex * resolution * numSegmentPoints * 3 * Float32Array.BYTES_PER_ELEMENT;
+    let indexCurveLine = currentIndex * (2 + resolution * n_segment_points) * n_control_points * Float32Array.BYTES_PER_ELEMENT;
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER, indexCurveLine, flatten(curve_lines));
     
     // Update Points
-    let indexControlGroup = currentIndex * 3 * 3 * Float32Array.BYTES_PER_ELEMENT;
+    let indexControlGroup = currentIndex * n_control_points * n_point_dim * Float32Array.BYTES_PER_ELEMENT;
     gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER, indexControlGroup, flatten(currentGroup));
     
@@ -200,12 +194,12 @@ function euclidean(point1, point2) {
 function find_snap(control_groups_array, radius, include_control=false) {
     let min_dist = Infinity;
     let sx, sy;
-
-    let num_points_to_check = (include_control ? 3 : 2);
-
+    
     for (let i = 0; i < control_groups_array.length; i++) {
         for (let k = 0; k < control_groups_array[i].length; k++) {
-            for (let j = 0; j < num_points_to_check; j++) {
+            for (let j = 0; j < n_control_points; j++) {
+                if (!include_control && ((j+1) % 2 == 0)) { continue; }
+
                 let dist = euclidean(mouse_pos, control_groups_array[i][j]);
                 if ((dist < radius) & (dist < min_dist)) { 
                     min_dist = dist;

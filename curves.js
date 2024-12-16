@@ -1,22 +1,40 @@
 // http://demofox.org/bezquadrational.html
 
-function drawBezierCurve(controlPointGroup, weights, resolution) {
+function computeBezierCurve(controlPointGroup, resolution) {
     if (resolution == undefined) {
         resolution = 100; // Number of points for one curve
     }
     var curvePoints = [];
     for (let i = 0; i <= resolution; i++) {
         var t = i / resolution;
-        var point = getBezierCurvePoint(controlPointGroup, weights, t);
+        var point = cubicBezierCurvePoint(t, controlPointGroup);
         curvePoints.push([point[0], point[1], 0.0]);
     }
     return curvePoints;
 }
 
-function getBezierCurvePoint(controlPointGroup, weights, t) {
-    var part_one   = scale(weights[0] * (1-t) * (1-t), vec3(...controlPointGroup[0])); // Start point
-    var part_two   = scale(weights[1] * 2 * t * (1-t), vec3(...controlPointGroup[2])); // Control point
-    var part_three = scale(weights[2] * t * t,         vec3(...controlPointGroup[1])); // End point
+const cubicBezierBasisMatrix = math.matrix([
+    [ 1,  0,  0,  0],
+    [-3,  3,  0,  0],
+    [ 3, -6,  3,  0],
+    [-1,  3, -3,  1],
+]);
+
+function cubicBezierCurvePoint(t, controlPointGroup) {
+    let [p0,p1,p2,p3] = controlPointGroup;
+
+    const T = math.transpose(math.matrix([1, t, t**2, t**3]));
+    const P = math.matrix([p0,p1,p3,p2]);
+    const basis = math.multiply(T, cubicBezierBasisMatrix);
+    const point = math.multiply(math.transpose(basis), P);
+    return [point.get([0]), point.get([1])];
+}
+
+
+function getBezierCurvePoint(t, controlPointGroup) {
+    var part_one   = scale((1-t) * (1-t), vec3(...controlPointGroup[0])); // Start point
+    var part_two   = scale(2 * t * (1-t), vec3(...controlPointGroup[2])); // Control point
+    var part_three = scale(t * t,         vec3(...controlPointGroup[1])); // End point
     return add(part_one, add(part_two, part_three));
 }
 
