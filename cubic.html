@@ -132,7 +132,7 @@ canvas {
     uniform int u_fix;
     uniform int u_primitiveType; // 0 for points, 1 for others
     float dist;
-    float alpha;
+    float alpha = 1.0;
 
     void main() {
         if (u_primitiveType == 0) {
@@ -140,7 +140,6 @@ canvas {
                 if (u_do_fill == 1) {
                     vec2 coord = gl_PointCoord; // Convert from [0,1] to [-1,1]
                     dist = (coord.x) + (coord.y); // Use Manhattan distance
-                    alpha = 1.0;
                 } else {
                     vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
                     dist = abs(coord.x) + abs(coord.y); // Use Manhattan distance

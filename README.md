@@ -23,12 +23,14 @@ Draw filled in twitter logo
     - [x] Link til program
 
 - [x] Read color from color picker
+- [x] Lines also get colored
+- [ ] End lines being round
 - [ ] Undo and Redo
-- [ ] No colors when modifying
-- [ ] Be able to reset canvas
+- [x] No colors when modifying
+- [x] Be able to reset canvas
 - [ ] Be able to save canvas as png
 - [ ] Video demo
-- [ ] Publish page
+- [x] Publish page
 
 
 

@@ -156,11 +156,10 @@ function render() {
         // Draw handles between pairs of control points:
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-        gl.uniform4fv(colorLocation, [0, 0, 0, 1]);
         gl.uniform1i(primitiveTypeLocation, 1);
         gl.drawArrays(gl.LINES, 0, numControlPoints);
     }
-
+    
     // Draw curve segments:
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
@@ -244,9 +243,15 @@ function add_point(mouse_up=false) {
     if (currentGroupFixed.length == n_control_points) { currentGroupFixed = []; }
 }
 
-function remove_curve() {
-    let snap_indices = find_snap(controlGroupsArray, grab_radius);
-    let can_snap = (snap_indices !== undefined);
+function remove_curve(idx=undefined) {
+    let snap_indices, can_snap;
+    if (idx === undefined) {
+        snap_indices = find_snap(controlGroupsArray, grab_radius);
+        can_snap = (snap_indices !== undefined);
+    } else {
+        snap_indices = [idx, 0];
+        can_snap = true;
+    }
 
     if (can_snap) {
         currentIndex = snap_indices[0];

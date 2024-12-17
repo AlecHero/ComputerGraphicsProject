@@ -15,7 +15,7 @@ function toggleToolButton(index) {
     current_line_width = line_width;
     update_points();
 
-    if (index == undefined) { return; }
+    if (index == undefined || index == 4 || index == 5) { return; }
     if (activeButtonIndex === index) {
         buttons[index].style.background = 'rgba(255, 255, 255, 0.9)';
         activeButtonIndex = -1;
@@ -45,6 +45,17 @@ function toggleToolButton(index) {
 
 // Get bucket color with:
 // document.querySelector('.color-picker').style.backgroundColor
+
+function clear_all() {
+    is_saving = false;
+    is_filled = false;
+    currentIndex = -1;
+    for (let i = 0; i < controlGroupsArray.length; i++) {
+        remove_curve(i);
+    }
+
+    setTool(TOOLS.NONE);
+}
 
 function saveImage() {
     const canvas = document.querySelector('canvas');
