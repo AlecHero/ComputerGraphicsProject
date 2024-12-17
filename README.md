@@ -28,7 +28,7 @@ Draw filled in twitter logo
 - [ ] Undo and Redo
 - [x] No colors when modifying
 - [x] Be able to reset canvas
-- [ ] Be able to save canvas as png
+- [x] Be able to save canvas as png
 - [ ] Video demo
 - [x] Publish page
 

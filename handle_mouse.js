@@ -16,8 +16,8 @@ function initEventHandlers(canvas) {
 
         if (is_on_canvas(ev)) {
             switch (currentTool) {
-                case TOOLS.ADD_POINTS: { add_point(); break; }
-                case TOOLS.SELECT_POINTS: { select_point(); break; }
+                case TOOLS.ADD_POINTS: { add_point(); add_keystroke(mouse_pos, currentTool, false); break; }
+                case TOOLS.SELECT_POINTS: { select_point(); add_keystroke(mouse_pos, currentTool, false); break; }
             }
         }
         update_bools();
@@ -27,10 +27,10 @@ function initEventHandlers(canvas) {
     canvas.onmouseup = function (ev) {
         if (is_on_canvas(ev)) {
             switch (currentTool) {
-                case TOOLS.ADD_POINTS: { add_point(mouse_up=true); break; }
-                case TOOLS.REMOVE_POINTS: { remove_curve(); break; }
-                case TOOLS.SELECT_POINTS: { select_point(mouse_up=true); break; }
-                case TOOLS.FILL: { fill_tool(); break; }
+                case TOOLS.ADD_POINTS: { add_point(mouse_up=true); add_keystroke(mouse_pos, currentTool, true); break; }
+                case TOOLS.REMOVE_POINTS: { remove_curve(); add_keystroke(mouse_pos, currentTool, true); break; }
+                case TOOLS.SELECT_POINTS: { select_point(mouse_up=true); add_keystroke(mouse_pos, currentTool, true); break; }
+                case TOOLS.FILL: { fill_tool(); add_keystroke(mouse_pos, currentTool, true); break; }
             }
         }
         is_dragging = false;

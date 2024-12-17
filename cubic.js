@@ -99,14 +99,16 @@ function main() {
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
     
     window.addEventListener('resize', () => { render(); });
+    window.addEventListener('keydown', HandleUndoKeyPress);
+    window.addEventListener('keydown', HandleRedoKeyPress);
     initEventHandlers(canvas);
     render();
     
-    draw_test();
+    // draw_test();
     // erase_test();
     
     // draw_test();
-    select_test();
+    // select_test();
     
     // draw_test2();
     // fill_test();
