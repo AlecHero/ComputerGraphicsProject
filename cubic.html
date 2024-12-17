@@ -104,12 +104,20 @@ canvas {
 
 <!-- VERTEX SHADER -->
 <script id="vertex-shader" type="x-shader/x-vertex">
+    precision mediump float;
+    precision lowp int;
+
     attribute vec4 a_position;
     uniform float u_point_size;
+    uniform int u_fix;
     // uniform float u_aspect_ratio;
 
     void main() {
-        gl_PointSize = 15.0;
+        if (u_fix == 1) {
+            gl_PointSize = 13.0;
+        } else {
+            gl_PointSize = 15.0;
+        }
         gl_Position = a_position;
     }
 </script>
@@ -117,22 +125,30 @@ canvas {
 <!-- FRAGMENT SHADER -->
 <script id="fragment-shader" type="x-shader/x-fragment">
     precision mediump float;
+    precision lowp int;
     uniform vec4 u_color;
     uniform int u_do_fill;
+    uniform int u_fix;
     float dist;
     float alpha;
 
     void main() {
-        if (u_do_fill == 1) {
-            vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
-            dist = (coord.x) + (coord.y); // Use Manhattan distance
-            alpha = 1.0;
+        if (u_fix == 0) {
+            if (u_do_fill == 1) {
+                vec2 coord = gl_PointCoord; // Convert from [0,1] to [-1,1]
+                dist = (coord.x) + (coord.y); // Use Manhattan distance
+                alpha = 1.0;
+            } else {
+                vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
+                dist = abs(coord.x) + abs(coord.y); // Use Manhattan distance
+                if (dist > 1.0) { discard; } // Discard fragments outside the diamond
+                float edge = 0.3; // Feather width
+                alpha = smoothstep(1.0, 1.0 - edge, dist*1.5);
+            }
         } else {
-            vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
-            dist = abs(coord.x) + abs(coord.y); // Use Manhattan distance
-            if (dist > 1.0) { discard; } // Discard fragments outside the diamond
-            float edge = 0.3; // Feather width
-            alpha = smoothstep(1.0, 1.0 - edge, dist*1.5);
+            vec2 coord = 2.0 * gl_PointCoord - 1.0;
+            dist = length(coord);
+            if (dist > 1.0) { discard; }
         }
 
         vec4 col = u_color;

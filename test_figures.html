@@ -4,7 +4,7 @@
         attribute vec4 vPosition;
         uniform float pointSize;
         void main() {
-            gl_PointSize = pointSize;
+            gl_PointSize = pointSize*0.3;
             gl_Position = vPosition;
         }
     </script>

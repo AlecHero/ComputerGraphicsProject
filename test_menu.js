@@ -1,5 +1,6 @@
 let activeButtonIndex = -1;
 let selectedColor = '#000000';
+let rgbColor = [0,0,0];
 
 function toggleToolButton(index) {
     const buttons = document.querySelectorAll('.tool-btn');
@@ -10,6 +11,9 @@ function toggleToolButton(index) {
     else if (index == 2) { setTool(TOOLS.REMOVE_POINTS) }
     else if (index == 3) { setTool(TOOLS.FILL) }
     else if (index == 4) { clear_all(); }
+
+    current_line_width = line_width;
+    update_points();
 
     if (index == undefined) { return; }
     if (activeButtonIndex === index) {
@@ -94,7 +98,17 @@ document.addEventListener('DOMContentLoaded', function() {
         
         colorPicker.addEventListener('input', (e) => {
             selectedColor = e.target.value;
+            rgbColor = hex2rgb(selectedColor);
             colorPicker.style.backgroundColor = selectedColor;
         });
     });
 });
+
+const hex2rgb = (hex) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    
+    // return {r, g, b} 
+    return [r/255, g/255, b/255];
+}

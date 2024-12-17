@@ -46,7 +46,6 @@ function initEventHandlers(canvas) {
         mouse_can_snap = (snap_indices !== undefined);
         
         update_cursor();
-        console.log(mouse_can_snap);
 
         if (is_on_canvas(ev)) {
             if ((is_lining) || (is_dragging && is_selecting)) {
