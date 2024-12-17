@@ -21,10 +21,11 @@ let hoveredGroup = [];
 let mouse_pos = [0,0];
 
 const TOOLS = {
-    SELECT_POINTS: "SELECT_POINTS",
-    ADD_POINTS: "ADD_POINTS",
-    REMOVE_POINTS: "REMOVE_POINTS",
-    FILL: "FILL",
+    NONE: undefined,
+    ADD_POINTS: 0,
+    SELECT_POINTS: 1,
+    REMOVE_POINTS: 2,
+    FILL: 3,
 }
 let currentTool = TOOLS.ADD_POINTS;
 function setTool(newTool) {
@@ -37,16 +38,16 @@ function setTool(newTool) {
     }
 }
 
-const resolution = 25;
+const resolution = 35;
 const line_width = .01;
-const snap_radius = 0.03; // make more sensible number to work from
+const drop_radius = 0.04; // make more sensible number to work from
+const grab_radius = 0.02; // make more sensible number to work from
 const max_curves = 2000;
 const n_segment_points = 4; // Depends on how many points in createThickLine
 const n_control_points = 4;
 const n_point_dim = 3;
 
 const dummy_point = [[Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0]];
-
 
 function main() {
     canvas = document.getElementById("canvas");
@@ -78,6 +79,20 @@ function main() {
     window.addEventListener('resize', () => { render(); });
     initEventHandlers(canvas);
     render();
+    
+    draw_test();
+    erase_test();
+    
+    draw_test();
+    select_test();
+    
+    draw_test2();
+
+    erase_test();
+    
+    // Ensure no tools is picked initially
+    currentTool = TOOLS.NONE;
+    toggleToolButton(currentTool);
 }
 
 function render() {
@@ -87,53 +102,76 @@ function render() {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.useProgram(program);
+    
+    let numControlPoints = 0;
+    console.log("oioi", controlGroupsArray);
+    for (let i = 0; i < controlGroupsArray.length; i++) { numControlPoints += controlGroupsArray[i].length; }
+    console.log(numControlPoints);
 
-    // Draw curves
     let numCurvePoints = 0;
     for (let i = 0; i < curveLinesArray.length; i++) {
         for (let j = 0; j < curveLinesArray[i].length; j++) {
             numCurvePoints += curveLinesArray[i][j].length;
         }
     }
+    
+    // Draw handles between pairs of control points:
+    gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
+    gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+    gl.uniform4fv(colorLocation, [0, 0, 0, 1]);
+    gl.drawArrays(gl.LINES, 0, numControlPoints);
+
+    // Draw curve segments:
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
     gl.uniform4fv(colorLocation, [0.0, 0.0, 0.0, 1]);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, numCurvePoints);
 
-    // Draw control points
-    let numControlPoints = flatten(controlGroupsArray).length + currentGroup.length;
+    // Draw control points:
     gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
-
-    gl.uniform4fv(colorLocation, [1.0, 0.0, 0.0, 1]);
+    gl.uniform4fv(colorLocation, [.8, .8, .8, 1]);
     gl.drawArrays(gl.POINTS, 0, numControlPoints);
 }
 
 
-function select_point(drop=false) {
-    let snap_indices = find_snap(controlGroupsArray, snap_radius, include_control=true);
-    let has_selected_point = (snap_indices !== undefined);
-    
-    if (has_selected_point) {
+function select_point(mouse_up=false) {
+    // let is_control_point = (currentGroupFixed.indexOf(undefined) % 2 == 1);
+
+    let snap_indices = find_snap(controlGroupsArray, grab_radius, include_control=!mouse_up);
+    let can_snap = (snap_indices !== undefined);
+
+    if (can_snap) {
         currentIndex = snap_indices[0];
-        currentGroupFixed = controlGroupsArray[snap_indices[0]].slice();
-        controlGroupsArray[snap_indices[0]] = dummy_point.slice();
-        if (!drop) {currentGroupFixed[snap_indices[1]] = undefined; }
+        currentGroupFixed = controlGroupsArray[currentIndex].slice();
+        controlGroupsArray[currentIndex] = dummy_point.slice();
+        if (!mouse_up) { currentGroupFixed[snap_indices[1]] = undefined; }
     }
-    
+
+    if (mouse_up) {
+        currentGroupFixed[currentGroupFixed.indexOf(undefined)] = [...mouse_pos, 0.0];
+    }
     updateCurrentControlGroup();
 }
 
 
-function add_point() {
-    if (currentGroupFixed.length == 0) { currentIndex = controlGroupsArray.length; }
+function add_point(mouse_up=false) {
+    // If fixed group is completely fixed/set, clear it
+    if (currentGroupFixed.length == n_control_points) { currentGroupFixed = []; }
+
+    if (currentGroupFixed.length == 0) {
+        if (mouse_up) { return; }
+        currentIndex = controlGroupsArray.length;
+    }
 
     // Snap to point if any are viable:
     let controlGroupsArrayWOCurrent = controlGroupsArray.slice();
     controlGroupsArrayWOCurrent[currentIndex] = dummy_point.slice();
 
-    let snap_indices = find_snap(controlGroupsArrayWOCurrent, snap_radius);
-    let can_snap = (snap_indices !== undefined) && (currentGroupFixed.length < 2);
+    let snap_indices = find_snap(controlGroupsArrayWOCurrent, drop_radius);
+    let can_snap = (snap_indices !== undefined) && ((currentGroupFixed.length % 2) == 0);
+    // can_snap = false;
+
     let snapped_point = (!can_snap) ? [...mouse_pos, 0.0] : controlGroupsArray[snap_indices[0]][snap_indices[1]];
     
     // Add new point
@@ -145,12 +183,35 @@ function add_point() {
     if (currentGroupFixed.length == n_control_points) { currentGroupFixed = []; }
 }
 
+function remove_curve() {
+    let snap_indices = find_snap(controlGroupsArray, grab_radius);
+    let can_snap = (snap_indices !== undefined);
+
+    if (can_snap) {
+        currentIndex = snap_indices[0];
+        // Removing does not work, will replace instead
+        // controlGroupsArray.splice(currentIndex, 1);
+        // curvePointsArray.splice(currentIndex, 1);
+        // curveLinesArray.splice(currentIndex, 1);
+        controlGroupsArray[currentIndex] = dummy_point.slice();
+        curvePointsArray[currentIndex] = dummy_point.slice();
+        curveLinesArray[currentIndex] = dummy_point.slice();
+        currentGroupFixed = [];
+        currentGroup = [];
+    }
+    updateCurve();
+}
+
 
 function updateCurrentControlGroup() {
+    if (currentGroupFixed.length == 0) { return; }
+    
     currentGroup = currentGroupFixed.slice();
 
-    let snap_indices = find_snap(controlGroupsArray, snap_radius);
+    let snap_indices = find_snap(controlGroupsArray, drop_radius);
     let can_snap = (snap_indices !== undefined) && (currentGroupFixed.length < 2);
+    can_snap = false;
+
     let snapped_point = (!can_snap) ? [...mouse_pos, 0.0] : controlGroupsArray[snap_indices[0]][snap_indices[1]];
 
     // Fill undefined values:
@@ -164,16 +225,27 @@ function updateCurrentControlGroup() {
 }
 
 function updateCurve() {
+    let curve_points = [];
+    let curve_lines = [];
+
+    if (currentGroupFixed.length != 0) {
+        // Compute Curve
+        curve_points = computeBezierCurve(currentGroup, resolution);
+        curvePointsArray[currentIndex] = [curve_points]
+        
+        curve_lines = createThickLinesFromCurve(curve_points, line_width);
+        curveLinesArray[currentIndex] = [curve_lines]
+    } else {
+        curve_lines = Array((2 + (resolution-1) * n_segment_points) * n_control_points).fill(2);
+        currentGroup = Array(n_control_points * n_point_dim).fill(2);
+    }
+
     // Update Curve
-    let curve_points = computeBezierCurve(currentGroup, resolution);
-    curvePointsArray[currentIndex] = [curve_points]
-    
-    let curve_lines = createThickLinesFromCurve(curve_points, line_width);
-    curveLinesArray[currentIndex] = [curve_lines]
-    let indexCurveLine = currentIndex * (2 + resolution * n_segment_points) * n_control_points * Float32Array.BYTES_PER_ELEMENT;
+    let indexCurveLine = currentIndex * (2 + (resolution-1) * n_segment_points) * n_control_points * Float32Array.BYTES_PER_ELEMENT;
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferSubData(gl.ARRAY_BUFFER, indexCurveLine, flatten(curve_lines));
     
+    console.log(currentGroup);
     // Update Points
     let indexControlGroup = currentIndex * n_control_points * n_point_dim * Float32Array.BYTES_PER_ELEMENT;
     gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
@@ -199,7 +271,7 @@ function find_snap(control_groups_array, radius, include_control=false) {
         for (let k = 0; k < control_groups_array[i].length; k++) {
             for (let j = 0; j < n_control_points; j++) {
                 if (!include_control && ((j+1) % 2 == 0)) { continue; }
-
+                if (i == currentIndex && (currentTool == TOOLS.ADD_POINTS)) { continue; }
                 let dist = euclidean(mouse_pos, control_groups_array[i][j]);
                 if ((dist < radius) & (dist < min_dist)) { 
                     min_dist = dist;
@@ -209,6 +281,50 @@ function find_snap(control_groups_array, radius, include_control=false) {
         }
     }
     return (sx === undefined) ? undefined : [sx, sy];
+}
+
+
+function draw_test() {
+    currentTool = TOOLS.ADD_POINTS;
+    mouse_pos = [-0.5, -0.5];
+    add_point();
+    mouse_pos = [-0.5, 0.5];
+    add_point();
+    mouse_pos = [0.5, -0.5];
+    add_point();
+    mouse_pos = [0.5, 0.5];
+    add_point();
+}
+
+function draw_test2() {
+    currentTool = TOOLS.ADD_POINTS;
+    mouse_pos = [-0.5, -0.535];
+    add_point();
+    mouse_pos = [-0.5, -0.9];
+    add_point();
+    mouse_pos = [0.5, -0.535];
+    add_point();
+    mouse_pos = [0.5, -0.9];
+    add_point();
+}
+
+function select_test() {
+    currentTool = TOOLS.SELECT_POINTS;
+    mouse_pos = [-0.5, 0.5];
+    select_point();
+    mouse_pos = [0, 0.5];
+    select_point(mouse_up=true);
+
+    mouse_pos = [0.5, 0.5];
+    select_point();
+    mouse_pos = [0.0, 0.5];
+    select_point(mouse_up=true);
+}
+
+function erase_test() {
+    currentTool = TOOLS.REMOVE_POINTS;
+    mouse_pos = [-0.5, -0.5];
+    remove_curve();
 }
 
 window.onload = main;

@@ -5,8 +5,8 @@ function computeBezierCurve(controlPointGroup, resolution) {
         resolution = 100; // Number of points for one curve
     }
     var curvePoints = [];
-    for (let i = 0; i <= resolution; i++) {
-        var t = i / resolution;
+    for (let i = 0; i <= (resolution-1); i++) {
+        var t = i / (resolution-1);
         var point = cubicBezierCurvePoint(t, controlPointGroup);
         curvePoints.push([point[0], point[1], 0.0]);
     }
