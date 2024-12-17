@@ -30,7 +30,7 @@ function initEventHandlers(canvas) {
                 case TOOLS.ADD_POINTS: { add_point(mouse_up=true); break; }
                 case TOOLS.REMOVE_POINTS: { remove_curve(); break; }
                 case TOOLS.SELECT_POINTS: { select_point(mouse_up=true); break; }
-                // case TOOLS.FILL: { fill(); break; }
+                case TOOLS.FILL: { fill_tool(); break; }
             }
         }
         is_dragging = false;

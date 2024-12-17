@@ -118,14 +118,23 @@ canvas {
 <script id="fragment-shader" type="x-shader/x-fragment">
     precision mediump float;
     uniform vec4 u_color;
+    uniform int u_do_fill;
+    float dist;
+    float alpha;
 
     void main() {
-        vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
-        float dist = abs(coord.x) + abs(coord.y); // Use Manhattan distance
-        if (dist > 1.0) { discard; } // Discard fragments outside the diamond
+        if (u_do_fill == 1) {
+            vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
+            dist = (coord.x) + (coord.y); // Use Manhattan distance
+            alpha = 1.0;
+        } else {
+            vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
+            dist = abs(coord.x) + abs(coord.y); // Use Manhattan distance
+            if (dist > 1.0) { discard; } // Discard fragments outside the diamond
+            float edge = 0.3; // Feather width
+            alpha = smoothstep(1.0, 1.0 - edge, dist*1.5);
+        }
 
-        float edge = 0.3; // Feather width
-        float alpha = smoothstep(1.0, 1.0 - edge, dist*1.5);
         vec4 col = u_color;
         col.xyz *= alpha;
         gl_FragColor = col;
@@ -140,6 +149,7 @@ canvas {
 <script type="text/javascript" src="cubic.js"></script>
 <script type="text/javascript" src="curves.js"></script>
 <script type="text/javascript" src="handle_mouse.js"></script>
+<script type="text/javascript" src="figures_and_colors.js"></script>
 
 
 <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
