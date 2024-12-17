@@ -18,15 +18,18 @@ window.onload = function init()
     vertices =  [ vec2(0.0, 0.0), vec2(1, 0), vec2(1, 1) ];
     var vertices2 = [vec2(1, 1), vec2(0, 1), vec2(0, 0)];
     
-    var weights = [1, 1, 1]; // Maybe you should be able to change these
     var resolution = 500;
-    points = drawBezierCurve(vertices, weights, resolution);
-    points.push(...drawBezierCurve(vertices2, weights, resolution));
+    points = drawBezierCurve(vertices, resolution);
+    points.push(...drawBezierCurve(vertices2, resolution));
     vertices.push(...vertices2);
 
-    var colors = color(vec3(-0.5, -0.5, 0), points, 0.02);
-    console.log(colors);
-    var colors_vec2 = colors.map(color => vec2(color[0], color[1]));
+    let colors = [];
+    let colors_vec2 = [];
+    colors = fillTool(vec3(0.5, 0.5, 0), points, 0.02);
+    colors_vec2 = colors.map(color => vec2(color[0], color[1]));
+    
+    // console.log(points);
+    // console.log(colors);
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 0.3921, 0.5843, 0.9294, 1.0);
@@ -34,14 +37,14 @@ window.onload = function init()
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
     gl.useProgram( program );
 
-    var maxPoints = Math.max(2 * (resolution + NumPoints), colors_vec2.length);
+    var maxPoints = Math.max(2 * (resolution + NumPoints) * Float32Array.BYTES_PER_ELEMENT, colors_vec2.length);
     var bufferId = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, bufferId );
-    gl.bufferData( gl.ARRAY_BUFFER, 8 * maxPoints, gl.STATIC_DRAW ); // 8 bytes per vec2
+    gl.bufferData( gl.ARRAY_BUFFER, 20 * maxPoints, gl.STATIC_DRAW ); // 8 bytes per vec2
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(points));
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0 );
+    gl.vertexAttribPointer( vPosition, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
     gl.uniform1f(gl.getUniformLocation(program, "pointSize"), pointSize);
@@ -59,9 +62,9 @@ window.onload = function init()
         gl.uniform4f(gl.getUniformLocation(program, "uColor"), 1.0, 0.0, 0.0, 1.0);
         gl.drawArrays( gl.POINTS, 0, vertices.length );
 
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(colors_vec2));
-        gl.uniform4f(gl.getUniformLocation(program, "uColor"), 0.0, 0.0, 0.0, 1.0);
-        gl.drawArrays( gl.POINTS, 0, colors_vec2.length );
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(colors));
+        gl.uniform4f(gl.getUniformLocation(program, "uColor"), 1.0, 0.0, 0.0, 1.0);
+        gl.drawArrays( gl.POINTS, 0, colors.length );
     }
     render();
 };

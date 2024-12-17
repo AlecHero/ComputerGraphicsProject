@@ -4,7 +4,7 @@ function distanceSquared(point1, point2) {
     return dx * dx + dy * dy;
 }
 
-function color(startPoint, edge_points, tolerance = 0.1) {
+function fillTool(startPoint, edge_points, tolerance = 0.1) {
     const visited = new Set();
     const result = [];
     const tolSq = (1 * tolerance) * (1 * tolerance);
@@ -33,10 +33,10 @@ function color(startPoint, edge_points, tolerance = 0.1) {
 
         visited.add(key);
         result.push(point);
-        queue.push(vec3(point[0] + tolerance, point[1], 0.0));
-        queue.push(vec3(point[0] - tolerance, point[1], 0.0));
-        queue.push(vec3(point[0], point[1] + tolerance, 0.0));
-        queue.push(vec3(point[0], point[1] - tolerance, 0.0));
+        queue.push([point[0] + tolerance, point[1], 0.0]);
+        queue.push([point[0] - tolerance, point[1], 0.0]);
+        queue.push([point[0], point[1] + tolerance, 0.0]);
+        queue.push([point[0], point[1] - tolerance, 0.0]);
     }
 
     return result;
