@@ -11,7 +11,7 @@ function toggleToolButton(index) {
     else if (index == 2) { setTool(TOOLS.REMOVE_POINTS) }
     else if (index == 3) { setTool(TOOLS.FILL) }
     else if (index == 4) { clear_all(); }
-
+    else if (index == 5) { is_saving = true; setTool(TOOLS.NONE); saveImage(); }
     current_line_width = line_width;
     update_points();
 
@@ -51,16 +51,13 @@ function saveImage() {
     let context;
     
     try {
-        // Try to get WebGL context first
         context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
         if (context) {
-            // For WebGL, we need to get the image data before the buffer is cleared
             const dataURL = canvas.toDataURL('image/png');
             downloadImage(dataURL);
             return;
         }
         
-        // If not WebGL, try 2D context
         context = canvas.getContext('2d');
         if (!context.getImageData(0, 0, canvas.width, canvas.height).data.some(channel => channel !== 0)) {
             console.log('Canvas appears to be empty!');
@@ -71,6 +68,8 @@ function saveImage() {
     } catch (error) {
         console.error('Error saving image:', error);
     }
+    // is_saving = false;
+    // render();
 }
 
 function downloadImage(dataURL) {
@@ -90,9 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
         buttons.forEach((button, index) => {
             button.addEventListener('click', () => {
                 toggleToolButton(index);
-                if (index === 5) {
-                    saveImage();
-                }
+                // if (index === 5) {
+                //     saveImage();
+                // }
             });
         });
         

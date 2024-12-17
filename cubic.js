@@ -11,7 +11,7 @@ let positionLocation
 let colorLocation;
 let fillLocation;
 let fixLocation;
-
+let primitiveTypeLocation;
 const resolution = 350;
 const line_width = .008;
 const line_width_thick = .04;
@@ -61,7 +61,7 @@ const dummy_line = [Array(n_calculated_curve).fill(Infinity)];
 
 function main() {
     canvas = document.getElementById("canvas");
-    gl = WebGLUtils.setupWebGL(canvas);
+    gl = WebGLUtils.setupWebGL(canvas, {preserveDrawingBuffer: true});
     program = initShaders(gl, "vertex-shader", "fragment-shader");
 
     // DOESNT ACTUALLY CORRECTLY BLEND CONTROL POINTS AND CURVES
@@ -91,6 +91,7 @@ function main() {
     pointSizeLocation = gl.getUniformLocation(program, "u_point_size");
     fillLocation = gl.getUniformLocation(program, "u_do_fill");
     fixLocation = gl.getUniformLocation(program, "u_fix");
+    primitiveTypeLocation = gl.getUniformLocation(program, "u_primitiveType");
     // aspectRatioLocation = gl.getUniformLocation(program, "u_aspect_ratio");
 
     gl.enableVertexAttribArray(positionLocation);
@@ -101,11 +102,11 @@ function main() {
     initEventHandlers(canvas);
     render();
     
-    // draw_test();
+    draw_test();
     // erase_test();
     
     // draw_test();
-    // select_test();
+    select_test();
     
     // draw_test2();
     // fill_test();
@@ -145,6 +146,7 @@ function render() {
         gl.bindBuffer(gl.ARRAY_BUFFER, fillPointPositionBuffer);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
         gl.uniform4fv(colorLocation, [...rgbColor, 1]);
+        gl.uniform1i(primitiveTypeLocation, 0);
         gl.drawArrays(gl.POINTS, 0, filled.length);
         gl.uniform1i(fillLocation, 0);
     }
@@ -155,6 +157,7 @@ function render() {
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
         gl.uniform4fv(colorLocation, [0, 0, 0, 1]);
+        gl.uniform1i(primitiveTypeLocation, 1);
         gl.drawArrays(gl.LINES, 0, numControlPoints);
     }
 
@@ -163,6 +166,7 @@ function render() {
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
     
     gl.uniform4fv(colorLocation, [...rgbColor, 1]);
+    gl.uniform1i(primitiveTypeLocation, 1);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, numCurvePoints);
 
     if (!is_saving && !is_filled) {
@@ -170,6 +174,7 @@ function render() {
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
         gl.uniform4fv(colorLocation, [.8, .8, .8, 1]);
+        gl.uniform1i(primitiveTypeLocation, 0);
         gl.drawArrays(gl.POINTS, 0, numControlPoints);
     }
 
@@ -179,7 +184,7 @@ function render() {
         gl.uniform1i(fixLocation, 1);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
         gl.uniform4fv(colorLocation, [...rgbColor, 1]);
-        
+        gl.uniform1i(primitiveTypeLocation, 0);
         gl.drawArrays(gl.POINTS, 0, 2);
         gl.uniform1i(fixLocation, 0);
     }
