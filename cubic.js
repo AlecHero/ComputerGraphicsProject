@@ -13,9 +13,9 @@ let fillLocation;
 let fixLocation;
 
 const resolution = 350;
-const line_width = .015;
+const line_width = .008;
 const line_width_thick = .04;
-const drop_radius = 0.04; // make more sensible number to work from
+const drop_radius = 0.07; // make more sensible number to work from
 const grab_radius = 0.02; // make more sensible number to work from
 const max_curves = 2000;
 const max_points = 32000;
@@ -48,6 +48,12 @@ const TOOLS = {
     FILL: 3,
 }
 let currentTool = TOOLS.ADD_POINTS;
+function setTool(new_tool) {
+    if (new_tool != currentTool) {
+        currentTool = new_tool;
+        render();
+    }
+}
 
 const n_calculated_curve = ((resolution-1) * n_segment_points + 2) * n_point_dim;
 const dummy_group = [[Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0], [Infinity, Infinity, 0]];
@@ -263,7 +269,7 @@ function fill_tool() {
         }
     }
 
-    filled = fillTool([...mouse_pos, 0.0], fill_curve, tolerance=0.01);
+    filled = fillTool([...mouse_pos, 0.0], fill_curve, tolerance=0.008);
 
     current_line_width = line_width_thick;
     update_points();
