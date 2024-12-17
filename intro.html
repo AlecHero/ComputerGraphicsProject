@@ -130,6 +130,21 @@
             color: #424242;
             margin-bottom: 2rem;
         }
+
+        .report-link {
+            display: block;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .report-link img {
+            max-width: 200px;
+            transition: transform 0.3s ease;
+        }
+
+        .report-link img:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -137,6 +152,11 @@
         <h1>Computer Graphics Project: Bézier Curve Drawing Tool</h1>
         
         <p class="intro-text">This project implements an interactive Bézier curve editor using WebGL. Users can create and manipulate curves through control points. This project demonstrates the use of curve mathematics, user interaction, and real-time rendering.</p>
+
+        <h2>Project Report</h2>
+        <a href="report.pdf" class="report-link" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" alt="Click to view detailed project report">
+        </a>
 
         <h2>Implemented Features</h2>
         <div class="features">
@@ -155,7 +175,6 @@
                 <ul class="feature-list">
                     <li>Custom color selection</li>
                     <li>Shape filling functionality</li>
-                    <li>High-quality antialiasing</li>
                     <li>WebGL-based rendering</li>
                 </ul>
             </div>
