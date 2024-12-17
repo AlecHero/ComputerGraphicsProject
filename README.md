@@ -22,6 +22,16 @@ Draw filled in twitter logo
     - [x] Explanation
     - [x] Link til program
 
+- [x] Read color from color picker
+- [ ] Undo and Redo
+- [ ] No colors when modifying
+- [ ] Be able to reset canvas
+- [ ] Be able to save canvas as png
+- [ ] Video demo
+- [ ] Publish page
+
+
+
 ### Explanation
 
 In our logo generator, you can do the following:
