@@ -3,22 +3,19 @@
 
 <div id="uiContainer">
     <div id="ui">
+        <div id="test1"></div>
+        <div id="test2"></div>
+        <div id="test3"></div>
+        <div id="test4"></div>
     </div>
 </div>
 
 <div class="tool-menu">
-    <button class="tool-btn"><img src="dark_krita_draw_path.svg" alt="Bezier Curve Icon" width="24px" height="24px"></button>
-    <button class="tool-btn"><img src="dark_shape_handling.svg" alt="Bezier Curve Icon" width="24px" height="24px"></button>
-    <button class="tool-btn"><img src="dark_draw-eraser.svg" alt="Bezier Curve Icon" width="24px" height="24px"></button>
-    <button class="tool-btn"><img src="dark_krita_tool_color_fill.svg" alt="Bezier Curve Icon" width="24px" height="24px"></button>
-    <button class="tool-btn"><img src="dark_edit-delete.svg" alt="Bezier Curve Icon" width="24px" height="24px"></button>
-    <button class="tool-btn"><img src="dark_save-svgrepo-com.svg" alt="Bezier Curve Icon" width="24px" height="24px"></button>
-
-    <!-- <button class="tool-btn"><i class="fas fa-bezier-curve"></i></button>
+    <button class="tool-btn"><i class="fas fa-bezier-curve"></i></button>
     <button class="tool-btn"><i class="fas fa-eraser"></i></button>
     <button class="tool-btn"><i class="fas fa-hand"></i></button>
     <button class="tool-btn"><i class="fas fa-fill-drip"></i></button>
-    <button class="tool-btn"><i class="fas fa-trash-alt"></i></button> -->
+    <button class="tool-btn"><i class="fas fa-trash-alt"></i></button>
 </div>
 <div class="color-picker-container">
     <input type="color" class="color-picker" value="#000000">
@@ -105,77 +102,51 @@ canvas {
 
 <!-- VERTEX SHADER -->
 <script id="vertex-shader" type="x-shader/x-vertex">
-    precision mediump float;
-    precision lowp int;
-
     attribute vec4 a_position;
     uniform float u_point_size;
-    uniform int u_fix;
-    // uniform float u_aspect_ratio;
 
     void main() {
-        if (u_fix == 1) {
-            gl_PointSize = 15.0;
-        } else {
-            gl_PointSize = 15.0;
-        }
+        gl_PointSize = u_point_size;
         gl_Position = a_position;
     }
 </script>
 
 <!-- FRAGMENT SHADER -->
 <script id="fragment-shader" type="x-shader/x-fragment">
+    #ifdef GL_ES
     precision mediump float;
-    precision lowp int;
+    #endif
+    // precision mediump float;
     uniform vec4 u_color;
-    uniform int u_do_fill;
-    uniform int u_fix;
-    uniform int u_primitiveType; // 0 for points, 1 for others
-    float dist;
-    float alpha = 1.0;
+
+    uniform float test1;
+    uniform float test2;
+    uniform float test3;
+    uniform float test4;
 
     void main() {
-        if (u_primitiveType == 0) {
-            if (u_fix == 0) {
-                if (u_do_fill == 1) {
-                    vec2 coord = gl_PointCoord; // Convert from [0,1] to [-1,1]
-                    dist = (coord.x) + (coord.y); // Use Manhattan distance
-                } else {
-                    vec2 coord = 2.0 * gl_PointCoord - 1.0; // Convert from [0,1] to [-1,1]
-                    dist = abs(coord.x) + abs(coord.y); // Use Manhattan distance
-                    if (dist > 1.0) { discard; } // Discard fragments outside the diamond
-                    float edge = 0.3; // Feather width
-                    alpha = smoothstep(1.0, 1.0 - edge, dist*1.5);
-                }
-            } else {
-                vec2 coord = 2.0 * gl_PointCoord - 1.0;
-                dist = length(coord);
-                if (dist > 1.0) { discard; }
-            }
-        }
+        //vec2 coord = 2.0 * gl_PointCoord - 1.0;
+        //float dist = length(coord);
+        //if (dist > 1.0) { discard; }
 
-        vec4 col = u_color;
-        col.xyz *= alpha;
-        gl_FragColor = col;
+        //float edge = 0.2; // Feather width
+        //float alpha = smoothstep(10.0, 4.0 - edge, dist);
+
+        // Set the final color with antialiasing
+        gl_FragColor = u_color;
     }
 </script>
 
 <!-- IMPORTED SCRIPTS -->
-<script src="math.js"></script>
 <script type="text/javascript" src="angelCommon/webgl-utils.js"></script>
 <script type="text/javascript" src="angelCommon/initShaders.js"></script>
 <script type="text/javascript" src="angelCommon/MV.js"></script>
-<script type="text/javascript" src="keyboard_binds.js"></script>
-<script type="text/javascript" src="cubic.js"></script>
+<script type="text/javascript" src="script.js"></script>
 <script type="text/javascript" src="curves.js"></script>
-<script type="text/javascript" src="handle_mouse.js"></script>
-<script type="text/javascript" src="figures_and_colors.js"></script>
-
 
 <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
 <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
 <script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
-
 
 <script src="test_menu.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
