@@ -25,7 +25,7 @@ Draw filled in twitter logo
 - [x] Read color from color picker
 - [x] Lines also get colored
 - [ ] End lines being round
-- [ ] Undo and Redo
+- [x] Undo and Redo
 - [x] No colors when modifying
 - [x] Be able to reset canvas
 - [x] Be able to save canvas as png
