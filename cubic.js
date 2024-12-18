@@ -12,6 +12,7 @@ let colorLocation;
 let fillLocation;
 let fixLocation;
 let primitiveTypeLocation;
+
 const resolution = 350;
 const line_width = .008;
 const line_width_thick = .04;
@@ -22,11 +23,12 @@ const max_points = 32000;
 const n_segment_points = 4; // Depends on how many points in createThickLine
 const n_control_points = 4;
 const n_point_dim = 3;
+const fill_tolerance = 0.008;
 
 let current_line_width = line_width;
 let current_color = [0,0,0];
 let is_saving = false;
-let is_filled = false;
+let is_filling = false;
 
 let currentIndex = -1;
 let controlGroupsArray = []; // (3 x 3 x n_curves + currentGroup)
@@ -39,6 +41,7 @@ let filled = [];
 
 let mouse_pos = [0,0];
 
+let fix_points = [];
 
 const TOOLS = {
     NONE: undefined,
@@ -92,7 +95,6 @@ function main() {
     fillLocation = gl.getUniformLocation(program, "u_do_fill");
     fixLocation = gl.getUniformLocation(program, "u_fix");
     primitiveTypeLocation = gl.getUniformLocation(program, "u_primitiveType");
-    // aspectRatioLocation = gl.getUniformLocation(program, "u_aspect_ratio");
 
     gl.enableVertexAttribArray(positionLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -105,15 +107,11 @@ function main() {
     render();
     
     // draw_test();
-    // erase_test();
-    
-    // draw_test();
     // select_test();
-    
     // draw_test2();
+
+    // draw_test3();
     // fill_test();
-    // fill_test();
-    // erase_test();
 
     // Ensure no tools is picked initially
     currentTool = TOOLS.NONE;
@@ -138,9 +136,12 @@ function render() {
         }
     }
 
-    if (currentTool != TOOLS.FILL) { is_filled = false; }
+    if (currentTool != TOOLS.FILL) {
+        // console.log(currentTool);
+        is_filling = false;
+    }
     
-    if (is_filled) {
+    if (is_filling) {
         gl.bindBuffer(gl.ARRAY_BUFFER, fillPointPositionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(filled), gl.DYNAMIC_DRAW);
         
@@ -154,14 +155,15 @@ function render() {
     }
     
     
-    if (!is_saving && !is_filled) {
+    if (!is_saving && !is_filling) {
         // Draw handles between pairs of control points:
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+        gl.uniform4fv(colorLocation, [0, 0, 0, 1]);
         gl.uniform1i(primitiveTypeLocation, 1);
         gl.drawArrays(gl.LINES, 0, numControlPoints);
     }
-    
+
     // Draw curve segments:
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
@@ -170,7 +172,7 @@ function render() {
     gl.uniform1i(primitiveTypeLocation, 1);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, numCurvePoints);
 
-    if (!is_saving && !is_filled) {
+    if (!is_saving && !is_filling) {
         // Draw control points:
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
@@ -179,14 +181,14 @@ function render() {
         gl.drawArrays(gl.POINTS, 0, numControlPoints);
     }
 
-    if (is_filled) {
+    if (is_filling) {
         // Draw fix:
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer2);
         gl.uniform1i(fixLocation, 1);
         gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
         gl.uniform4fv(colorLocation, [...rgbColor, 1]);
         gl.uniform1i(primitiveTypeLocation, 0);
-        gl.drawArrays(gl.POINTS, 0, 2);
+        gl.drawArrays(gl.POINTS, 0, fix_points.length);
         gl.uniform1i(fixLocation, 0);
     }
 }
@@ -272,8 +274,7 @@ function remove_curve(idx=undefined) {
 
 function fill_tool() {
     let fill_curve = [];
-
-    is_filled = true;
+    is_filling = true;
 
     for (let i = 0; i < curvePointsArray.length; i++) {
         if (curvePointsArray[i][0].indexOf(Infinity) == -1) {
@@ -281,11 +282,21 @@ function fill_tool() {
         }
     }
 
-    filled = fillTool([...mouse_pos, 0.0], fill_curve, tolerance=0.008);
-
+    filled = fillTool([...mouse_pos, 0.0], fill_curve, tolerance=fill_tolerance);
     current_line_width = line_width_thick;
+    
     update_points();
     render();
+}
+
+
+function save_img() {
+    is_saving = true;
+    render();
+
+    saveImage();
+    
+    setTool(TOOLS.NONE);
 }
 
 
@@ -337,8 +348,14 @@ function updateCurve() {
     gl.bufferSubData(gl.ARRAY_BUFFER, indexControlGroup, flatten(currentGroup));
     
     // Update Points scuffed
+    fix_points = [];
+    for (let i = 0; i < controlGroupsArray.length; i++) {
+        fix_points.push(controlGroupsArray[i][0]);
+        fix_points.push(controlGroupsArray[i][2]);
+    }
+    console.log(fix_points);
     gl.bindBuffer(gl.ARRAY_BUFFER, controlPointPositionBuffer2);
-    gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(Array(currentGroup[0], currentGroup[2])));
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(fix_points));
     
     render();
 }
@@ -397,6 +414,32 @@ function draw_test2() {
     add_point();
 }
 
+function draw_test3() {
+    currentTool = TOOLS.ADD_POINTS;
+
+    mouse_pos = [-0.65, 0.65];
+    add_point();
+    add_point();
+    mouse_pos = [-0.75, 0.65];
+    add_point();
+    add_point();
+
+    mouse_pos = [-0.65, 0.65];
+    add_point();
+    mouse_pos = [-0.65, 0.45];
+    add_point();
+    mouse_pos = [-0.75, 0.45];
+    add_point();
+    add_point();
+    
+    mouse_pos = [-0.75, 0.65];
+    add_point();
+    add_point();
+    mouse_pos = [-0.75, 0.45];
+    add_point();
+    add_point();
+}
+
 function select_test() {
     currentTool = TOOLS.SELECT_POINTS;
     mouse_pos = [-0.5, 0.5];
@@ -418,7 +461,8 @@ function erase_test() {
 
 function fill_test() {
     currentTool = TOOLS.FILL;
-    mouse_pos = [0.1, 0.0];
+    // console.log(currentTool); // TOOL IS UNDEFINED?!??!?!
+    mouse_pos = [0.0, 0.0];
     fill_tool();
 }
 

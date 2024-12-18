@@ -11,7 +11,7 @@ function toggleToolButton(index) {
     else if (index == 2) { setTool(TOOLS.REMOVE_POINTS) }
     else if (index == 3) { setTool(TOOLS.FILL) }
     else if (index == 4) { clear_all(); }
-    else if (index == 5) { is_saving = true; setTool(TOOLS.NONE); saveImage(); }
+    else if (index == 5) { save_img(); }
     current_line_width = line_width;
     update_points();
 
