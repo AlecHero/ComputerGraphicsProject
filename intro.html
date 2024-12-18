@@ -145,6 +145,15 @@
         .report-link img:hover {
             transform: scale(1.05);
         }
+
+        .example-image {
+            width: 100%;
+            max-width: 800px;
+            margin: 2rem auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -152,6 +161,9 @@
         <h1>Computer Graphics Project: Bézier Curve Drawing Tool</h1>
         
         <p class="intro-text">This project implements an interactive Bézier curve editor using WebGL. Users can create and manipulate curves through control points. This project demonstrates the use of curve mathematics, user interaction, and real-time rendering.</p>
+
+        <h2>Example Logo created with our Bézier curve editor</h2>
+        <img src="result_image.png" alt="Example artwork created with the Bézier curve editor" class="example-image">
 
         <h2>Project Report</h2>
         <a href="report.pdf" class="report-link" target="_blank">
@@ -166,7 +178,6 @@
                     <li>Interactive Bézier curve creation</li>
                     <li>Real-time curve manipulation</li>
                     <li>Control point snapping</li>
-                    <li>Adjustable curve thickness</li>
                 </ul>
             </div>
             
@@ -182,9 +193,8 @@
             <div class="feature-category">
                 <h3>User Interface</h3>
                 <ul class="feature-list">
-                    <li>Undo/Redo functionality</li>
+                    <li>Undo/Redo functionality with keyboard shortcuts</li>
                     <li>Intuitive mouse controls</li>
-                    <li>Keyboard shortcuts</li>
                     <li>Canvas image export</li>
                 </ul>
             </div>
@@ -192,10 +202,10 @@
 
         <h2>Technical Demonstration</h2>
         <div class="video-container">
-            <!-- Add your video embed code here -->
-            <p style="text-align: center; padding: 2rem; background: #f5f5f5; border-radius: 8px;">
-                Technical demonstration video will be added before final submission
-            </p>
+            <video width="100%" controls>
+                <source src="ComputerGraphicsDemo.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
         </div>
 
         <a href="main.html" class="start-button">Open Application</a>
